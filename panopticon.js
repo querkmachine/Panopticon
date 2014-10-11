@@ -13,21 +13,24 @@
 
 			var settings = $.extend({
 				'debug'    : false,
-				'controls' : true
+				'controls' : true,
+				'touch'    : true
 			}, options);
 			
 			var elementIdentifier = "PO" + Math.round((Math.random() * 1000) + 1000),
 			    currentSlide = 1,
-			    totalSlides = 1;
+			    totalSlides = 1,
+			    touchStartX = undefined,
+			    touchMoveX = undefined,
+			    moveX = undefined;
 
 			this.init = function() {
 				if(settings.debug) console.log("[" + elementIdentifier + "] Panopticon initialised.");
 				var self = this;
 				self.addContainer();
 				self.buildSlider();
-				if(settings.controls === true) {
-					self.bindControls();
-				}
+				if(settings.controls === true) self.bindControls();
+				if(settings.touch === true) self.bindTouch();
 				$(window).resize(function() {
 					setTimeout(function() {
 						self.buildSlider();
@@ -68,7 +71,7 @@
 				}
 				currentSlide = slideNumber;
 				offset = (0 - (slideWidth * (slideNumber - 1)));
-				$element.find(".panopticon__container").css({"margin-left": offset + "px"});
+				$element.find(".panopticon__container").css({"transform": "translateX(" + offset + "px)"});
 				if(settings.debug) console.log("[" + elementIdentifier + "] Go to slide " + slideNumber +". Offset: " + offset + "px.");
 			}
 
@@ -84,6 +87,31 @@
 				$element.find(".js-panopticon-next").on("click", function(e) {
 					e.preventDefault();
 					self.gotoSlide(currentSlide + 1);
+				});
+			}
+
+			this.bindTouch = function() {
+				var self = this;
+				$element.on("touchstart", function(e) {
+					touchStartX = e.originalEvent.touches[0].pageX;
+				});
+				$element.on("touchmove", function(e) {
+					var slideWidth = $element.outerWidth();
+					touchMoveX = e.originalEvent.touches[0].pageX;
+					moveX = currentSlide * slideWidth + (touchStartX - touchMoveX);
+				});
+				$element.on("touchend", function(e) {
+					var self = this,
+					    slideWidth = $element.outerWidth(),
+					    absMove = Math.abs(currentSlide * slideWidth - moveX);
+					if(absMove > slideWidth/3) {
+						if(moveX < (currentSlide * slideWidth)) {
+							self.gotoSlide(currentSlide - 1);
+						}
+						else if(moveX > (currentSlide * slideWidth)) {
+							self.gotoSlide(currentSlide + 1);
+						}
+					}
 				});
 			}
 

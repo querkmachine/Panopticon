@@ -14,5 +14,5 @@ Future features (maybe)
 -----------------------
 * ~~Make it a proper jQuery plugin.~~ 
 * ~~Proper support for multiple carousels on a single page (i.e. with the same class name).~~
-* Touch navigation support. 
+* ~~Touch navigation support.~~
 * I dunno, probably some other stuff.
