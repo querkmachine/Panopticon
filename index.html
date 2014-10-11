@@ -24,8 +24,7 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<script src="panopticon.js"></script>
 	<script>
-		var slider = new Panopticon({
-			context: $(".panopticon"),  // The target element.
+		$(".panopticon").panopticon({
 			debug: true,                // Whether to show debug messages in the console.
 			controls: true              // Whether to output and bind previous/next controls.
 		});

@@ -1,84 +1,96 @@
 /**********************************************************
- * PANOPTICON v0.1                                        *
+ * PANOPTICON v0.2                                        *
  * A really, really simple jQuery carousel                *
  * made by Grey Hargreaves (greysadventures.com)          *
  * for the Bristol Bronies website (bristolbronies.co.uk) *
 ***********************************************************/
 
-function Panopticon(config) {
-	this.context = config.context;
-	this.debug = typeof config.debug !== 'undefined' ? config.debug : false;
-	this.controls = typeof config.controls !== 'undefined' ? config.controls : true;
+(function($) {
 
-	this.currentSlide = 1;
-	this.totalSlides = 1;
+	$.fn.panopticon = function(options) {
+		this.each(function() {
+			var $element = $(this);
 
-	this.init();
-};
+			var settings = $.extend({
+				'debug'    : false,
+				'controls' : true
+			}, options);
+			
+			var elementIdentifier = "PO" + Math.round((Math.random() * 1000) + 1000),
+			    currentSlide = 1,
+			    totalSlides = 1;
 
-Panopticon.prototype.init = function() {
-	if(this.debug) console.log("Panopticon initialised.");
-	var self = this;
-	this.addContainer();
-	this.buildSlider();
-	if(this.controls === true) {
-		this.bindControls();
+			this.init = function() {
+				if(settings.debug) console.log("[" + elementIdentifier + "] Panopticon initialised.");
+				var self = this;
+				self.addContainer();
+				self.buildSlider();
+				if(settings.controls === true) {
+					self.bindControls();
+				}
+				$(window).resize(function() {
+					setTimeout(function() {
+						self.buildSlider();
+						self.gotoSlide(currentSlide);
+					}, 500);
+				});
+			}
+
+			this.addContainer = function() {
+				if($element.children(".panopticon__container").length == 0) {
+					$element.wrapInner('<div class="panopticon__container"></div>');
+					if(settings.debug) console.log("[" + elementIdentifier + "] Added wrapping container.");
+				}
+			}
+
+			this.buildSlider = function() {
+				var slides = $element.find(".panopticon__slide"),
+				    slideWidth = $element.outerWidth(),
+				    totalSlidesWidth = 0;
+				totalSlides = slides.length;
+				for(var i = 0; i < totalSlides; ++i) {
+					var $thisSlide = $(slides[i]);
+					$thisSlide.css({"width": slideWidth + "px"});
+					totalSlidesWidth = totalSlidesWidth + slideWidth;
+				}
+				$element.find(".panopticon__container").css({"width": totalSlidesWidth + "px"});
+				if(settings.debug) console.log("[" + elementIdentifier + "] Built slider. Slide width: " + slideWidth + "px. Total width: " + totalSlidesWidth + "px.");
+			}
+
+			this.gotoSlide = function(slideNumber) {
+				var offset = 0,
+				    slideWidth = $element.outerWidth();
+				if(slideNumber > totalSlides) { 
+					slideNumber = 1; 
+				}
+				else if(slideNumber <= 0) {
+					slideNumber = totalSlides;
+				}
+				currentSlide = slideNumber;
+				offset = (0 - (slideWidth * (slideNumber - 1)));
+				$element.find(".panopticon__container").css({"margin-left": offset + "px"});
+				if(settings.debug) console.log("[" + elementIdentifier + "] Go to slide " + slideNumber +". Offset: " + offset + "px.");
+			}
+
+			this.bindControls = function() {
+				var self = this;
+				$element.append('<div class="panopticon__controls"></div>');
+				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--previous"><a href="#" class="js-panopticon-prev"><span class="fa fa-fw fa-chevron-left"></span></a></div>');
+				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--next"><a href="#" class="js-panopticon-next"><span class="fa fa-fw fa-chevron-right"></span></a></div>');
+				$element.find(".js-panopticon-prev").on("click", function(e) {
+					e.preventDefault();
+					self.gotoSlide(currentSlide - 1);
+				});
+				$element.find(".js-panopticon-next").on("click", function(e) {
+					e.preventDefault();
+					self.gotoSlide(currentSlide + 1);
+				});
+			}
+
+			return this.init();
+
+		});
+
 	}
-	$(window).resize(function() {
-		setTimeout(function() {
-			self.buildSlider();
-			self.gotoSlide(self.currentSlide);
-		}, 500);
-	});
-};
 
-Panopticon.prototype.addContainer = function() {
-	if(this.context.children(".panopticon__container").length == 0) {
-		this.context.wrapInner('<div class="panopticon__container"></div>');
-		if(this.debug) console.log("Added wrapping container.");
-	}
-};
-
-Panopticon.prototype.buildSlider = function() {
-	var slides = this.context.find(".panopticon__slide"),
-	    slideWidth = this.context.outerWidth(),
-	    totalSlidesWidth = 0;
-	this.totalSlides = slides.length;
-	for(var i = 0; i < this.totalSlides; ++i) {
-		var $thisSlide = $(slides[i]);
-		$thisSlide.css({"width": slideWidth + "px"});
-		totalSlidesWidth = totalSlidesWidth + slideWidth;
-	}
-	this.context.find(".panopticon__container").css({"width": totalSlidesWidth + "px"});
-	if(this.debug) console.log("Slide width: " + slideWidth + "px. Total width: " + totalSlidesWidth + "px.");
-};
-
-Panopticon.prototype.gotoSlide = function(slideNumber) {
-	var offset = 0,
-	    slideWidth = this.context.outerWidth();
-	if(slideNumber > this.totalSlides) { 
-		slideNumber = 1; 
-	}
-	else if(slideNumber <= 0) {
-		slideNumber = this.totalSlides;
-	}
-	this.currentSlide = slideNumber;
-	offset = (0 - (slideWidth * (slideNumber - 1)));
-	this.context.find(".panopticon__container").css({"margin-left": offset + "px"});
-	if(this.debug) console.log("Go to slide " + slideNumber +". Offset " + offset + "px.");
-};
-
-Panopticon.prototype.bindControls = function() {
-	var self = this;
-	this.context.append('<div class="panopticon__controls"></div>');
-	this.context.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--previous"><a href="#" class="js-panopticon-prev"><span class="fa fa-fw fa-chevron-left"></span></a></div>');
-	this.context.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--next"><a href="#" class="js-panopticon-next"><span class="fa fa-fw fa-chevron-right"></span></a></div>');
-	this.context.find(".js-panopticon-prev").on("click", function(e) {
-		e.preventDefault();
-		self.gotoSlide(self.currentSlide - 1);
-	});
-	this.context.find(".js-panopticon-next").on("click", function(e) {
-		e.preventDefault();
-		self.gotoSlide(self.currentSlide + 1);
-	});
-};
+})(jQuery);

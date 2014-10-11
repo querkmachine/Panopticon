@@ -12,7 +12,7 @@ It's intended to be a simple starting point so that it can be hacked up and chan
 
 Future features (maybe)
 -----------------------
-* Make it a proper jQuery plugin. 
-* Proper support for multiple carousels on a single page (i.e. with the same class name).
+* -Make it a proper jQuery plugin.- 
+* -Proper support for multiple carousels on a single page (i.e. with the same class name).-
 * Touch navigation support. 
 * I dunno, probably some other stuff.
