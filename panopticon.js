@@ -47,13 +47,16 @@
 			}
 
 			this.buildSlider = function() {
+				$element.find(".panopticon__slide").css({ "padding": "" });
 				var slides = $element.find(".panopticon__slide"),
 				    slideWidth = $element.outerWidth(),
-				    totalSlidesWidth = 0;
+				    totalSlidesWidth = 0,
+				    containerHeight = $element.find(".panopticon__container").height();
 				totalSlides = slides.length;
 				for(var i = 0; i < totalSlides; ++i) {
 					var $thisSlide = $(slides[i]);
-					$thisSlide.css({"width": slideWidth + "px"});
+					var padding = ((containerHeight - $thisSlide.height()) / 2);
+					$thisSlide.css({"width": slideWidth + "px", "padding": padding + "px 0"});
 					totalSlidesWidth = totalSlidesWidth + slideWidth;
 				}
 				$element.find(".panopticon__container").css({"width": totalSlidesWidth + "px"});
