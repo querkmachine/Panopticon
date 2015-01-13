@@ -1,10 +1,15 @@
+img {
+	max-width: 100%;
+	height: auto;
+}
+
 .panopticon {
 	overflow: hidden;
 }
 
 .panopticon__container {
 	overflow: hidden;
-	transition: margin-left 0.5s ease;
+	transition: transform 0.5s ease;
 }
 
 .panopticon__slide {
