@@ -19,3 +19,18 @@ Future features (maybe)
 * Automatically hide controls when there's only one slide.
 * Slide indicators/navigation?
 * I dunno, probably some other stuff.
+
+Changelog
+---------
+
+### 0.3
+* Added vertical alignment for slideshows with varying height.
+* Added "pips".
+* *BREAKING* Renamed 'controls' option to 'arrows'.
+
+### 0.2
+* Converted to jQuery plugin.
+* Added touch support.
+
+### 0.1
+* Initial commit.

@@ -1,5 +1,5 @@
 /**********************************************************
- * PANOPTICON v0.2                                        *
+ * PANOPTICON v0.3                                        *
  * A really, really simple jQuery carousel                *
  * made by Grey Hargreaves (greysadventures.com)          *
  * for the Bristol Bronies website (bristolbronies.co.uk) *
@@ -13,7 +13,8 @@
 
 			var settings = $.extend({
 				'debug'    : false,
-				'controls' : true,
+				'arrows'   : true,
+				'pips'     : true,
 				'touch'    : true
 			}, options);
 			
@@ -29,8 +30,10 @@
 				var self = this;
 				self.addContainer();
 				self.buildSlider();
-				if(settings.controls === true) self.bindControls();
+				if(settings.arrows === true) self.bindArrows();
+				if(settings.pips === true) self.bindPips();
 				if(settings.touch === true) self.bindTouch();
+				self.bindControls();
 				$(window).resize(function() {
 					setTimeout(function() {
 						self.buildSlider();
@@ -78,18 +81,42 @@
 				if(settings.debug) console.log("[" + elementIdentifier + "] Go to slide " + slideNumber +". Offset: " + offset + "px.");
 			}
 
-			this.bindControls = function() {
+			this.bindArrows = function() {
 				var self = this;
 				$element.append('<div class="panopticon__controls"></div>');
-				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--previous"><a href="#" class="js-panopticon-prev"><span class="fa fa-fw fa-chevron-left"></span></a></div>');
-				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--next"><a href="#" class="js-panopticon-next"><span class="fa fa-fw fa-chevron-right"></span></a></div>');
-				$element.find(".js-panopticon-prev").on("click", function(e) {
+				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--previous"><a href="#" data-panopticon-slide="prev">Previous</a></div>');
+				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--next"><a href="#" data-panopticon-slide="next">Next</a></div>');
+				if(settings.debug) console.log("[" + elementIdentifier + "] Bound arrows.");
+			}
+
+			this.bindPips = function() {
+				var self = this;
+				$element.append('<div class="panopticon__pips"></div>');
+				var html = "";
+				for(var i = 0; i < totalSlides; ++i) {
+					var gotoSlide = (i+1);
+					html = html + '<a href="#" data-panopticon-slide="'+ gotoSlide +'">' + gotoSlide + '</a>';
+				}
+				$element.find(".panopticon__pips").append(html);
+				if(settings.debug) console.log("[" + elementIdentifier + "] Bound pips.");
+			}
+
+			this.bindControls = function() {
+				var self = this;
+				$element.find("[data-panopticon-slide]").on("click", function(e) {
 					e.preventDefault();
-					self.gotoSlide(currentSlide - 1);
-				});
-				$element.find(".js-panopticon-next").on("click", function(e) {
-					e.preventDefault();
-					self.gotoSlide(currentSlide + 1);
+					var gotoSlide = $(this).attr("data-panopticon-slide").toLowerCase();
+					switch(gotoSlide) {
+						case "prev":
+							self.gotoSlide(currentSlide - 1);
+							break;
+						case "next":
+							self.gotoSlide(currentSlide + 1);
+							break;
+						default: 
+							self.gotoSlide(gotoSlide);
+							break;
+					}
 				});
 			}
 
