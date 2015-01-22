@@ -1,154 +1,180 @@
 /**********************************************************
- * PANOPTICON v0.3                                        *
+ * PANOPTICON v1.0                                        *
  * A really, really simple jQuery carousel                *
  * made by Grey Hargreaves (greysadventures.com)          *
  * for the Bristol Bronies website (bristolbronies.co.uk) *
 ***********************************************************/
 
-(function($) {
+;(function($, window, document, undefined) {
 
-	$.fn.panopticon = function(options) {
-		this.each(function() {
-			var $element = $(this);
+	"use strict";
 
-			var settings = $.extend({
-				'debug'    : false,
-				'arrows'   : true,
-				'pips'     : true,
-				'touch'    : true
-			}, options);
-			
-			var elementIdentifier = "PO" + Math.round((Math.random() * 1000) + 1000),
-			    currentSlide = 1,
-			    totalSlides = 1,
-			    touchStartX = undefined,
-			    touchMoveX = undefined,
-			    moveX = undefined;
+		var pluginName = "panopticon";
+		var defaults = {
+		    debug: false,
+		    arrows: true,
+		    pips: true,
+		    touch: true
+		};
 
-			this.init = function() {
-				if(settings.debug) console.log("[" + elementIdentifier + "] Panopticon initialised.");
-				var self = this;
-				self.addContainer();
-				self.buildSlider();
-				if(settings.arrows === true) self.bindArrows();
-				if(settings.pips === true) self.bindPips();
-				if(settings.touch === true) self.bindTouch();
-				self.bindControls();
-				$(window).resize(function() {
-					setTimeout(function() {
-						self.buildSlider();
-						self.gotoSlide(currentSlide);
-					}, 500);
-				});
-			}
+		function Plugin(element, options) {
+			this.$element = $(element);
+			this.$container = undefined;
+			this.identifier = "PO" + Math.round((Math.random() * 1000) + 1000);
+			this.settings = $.extend( {}, defaults, options );
+			this._defaults = defaults;
+			this._name = pluginName;
 
-			this.addContainer = function() {
-				if($element.children(".panopticon__container").length == 0) {
-					$element.wrapInner('<div class="panopticon__container"></div>');
-					if(settings.debug) console.log("[" + elementIdentifier + "] Added wrapping container.");
+			this.nextText = "Next";
+			this.prevText = "Previous";
+
+			this.containerClass = "panopticon__container";
+			this.slideClass = "panopticon__slide";
+			this.arrowsClass = "panopticon__controls";
+			this.pipsClass = "panopticon__pips";
+
+			this.currentSlide = 1;
+			this.totalSlides = 1;
+
+			this.init();
+		}
+
+		$.extend(Plugin.prototype, {
+
+			init: function () {
+				if(this.settings.debug) console.log("[" + this.identifier + "] Panopticon initialised.");
+				this.addContainer();
+				this.buildSlider();
+				if(this.settings.arrows) this.buildArrows();
+				if(this.settings.pips) this.buildPips(); this.gotoSlide(1);
+				this.bindControls();
+				if(this.settings.touch) this.bindTouch();
+				this.bindResize();
+			},
+
+			addContainer: function() {
+				if(this.$element.children("." + this.containerClass).length < 1) {
+					this.$element.wrapInner("<div class=\"" + this.containerClass + "\"></div>");
+					if(this.settings.debug) console.log("[" + this.identifier + "] Add wrapper container.");
 				}
-			}
+				this.$container = this.$element.find("." + this.containerClass);
+			},
 
-			this.buildSlider = function() {
-				$element.find(".panopticon__slide").css({ "padding": "" });
-				var slides = $element.find(".panopticon__slide"),
-				    slideWidth = $element.outerWidth(),
-				    totalSlidesWidth = 0,
-				    containerHeight = $element.find(".panopticon__container").height();
-				totalSlides = slides.length;
-				for(var i = 0; i < totalSlides; ++i) {
+			buildSlider: function() {
+				var slides = this.$element.find("." + this.slideClass),
+				    slideWidth = this.$element.outerWidth(),
+				    totalWidth = 0;
+				this.totalSlides = slides.length;
+				for(var i = 0; i < this.totalSlides; ++i) {
 					var $thisSlide = $(slides[i]);
-					var padding = ((containerHeight - $thisSlide.height()) / 2);
-					$thisSlide.css({"width": slideWidth + "px", "padding": padding + "px 0"});
-					totalSlidesWidth = totalSlidesWidth + slideWidth;
+					$thisSlide.css({"width": slideWidth + "px"});
+					totalWidth += slideWidth;
 				}
-				$element.find(".panopticon__container").css({"width": totalSlidesWidth + "px"});
-				if(settings.debug) console.log("[" + elementIdentifier + "] Built slider. Slide width: " + slideWidth + "px. Total width: " + totalSlidesWidth + "px.");
-			}
+				this.$container.css({"width": totalWidth + "px"});
+				if(this.settings.debug) console.log("[" + this.identifier + "] Built slider. Slide width: " + slideWidth + "px. Total width: " + totalWidth + "px.");
+			},
 
-			this.gotoSlide = function(slideNumber) {
+			gotoSlide: function(slideNumber) {
 				var offset = 0,
-				    slideWidth = $element.outerWidth();
-				if(slideNumber > totalSlides) { 
-					slideNumber = 1; 
+				    slideWidth = this.$element.outerWidth();
+				if(slideNumber > this.totalSlides) {
+					slideNumber = 1;
 				}
 				else if(slideNumber <= 0) {
-					slideNumber = totalSlides;
+					slideNumber = this.totalSlides;
 				}
-				currentSlide = slideNumber;
+				this.currentSlide = slideNumber;
 				offset = (0 - (slideWidth * (slideNumber - 1)));
-				$element.find(".panopticon__container").css({"transform": "translateX(" + offset + "px)"});
-				if(settings.debug) console.log("[" + elementIdentifier + "] Go to slide " + slideNumber +". Offset: " + offset + "px.");
-			}
-
-			this.bindArrows = function() {
-				var self = this;
-				$element.append('<div class="panopticon__controls"></div>');
-				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--previous"><a href="#" data-panopticon-slide="prev">Previous</a></div>');
-				$element.find(".panopticon__controls").append('<div class="panopticon__control panopticon__control--next"><a href="#" data-panopticon-slide="next">Next</a></div>');
-				if(settings.debug) console.log("[" + elementIdentifier + "] Bound arrows.");
-			}
-
-			this.bindPips = function() {
-				var self = this;
-				$element.append('<div class="panopticon__pips"></div>');
-				var html = "";
-				for(var i = 0; i < totalSlides; ++i) {
-					var gotoSlide = (i+1);
-					html = html + '<a href="#" data-panopticon-slide="'+ gotoSlide +'">' + gotoSlide + '</a>';
+				this.$container.css({"transform": "translateX(" + offset + "px)"});
+				if(this.settings.debug) console.log("[" + this.identifier + "] Go to slide " + slideNumber +". Offset: " + offset + "px.");
+				if(this.settings.pips) {
+					var $pipsContainer = this.$element.find("." + this.pipsClass);
+					$pipsContainer.find("li").removeClass("current");
+					$pipsContainer.find("[data-panopticon-slide='" + slideNumber + "']").parent().addClass("current");
 				}
-				$element.find(".panopticon__pips").append(html);
-				if(settings.debug) console.log("[" + elementIdentifier + "] Bound pips.");
-			}
+			},
 
-			this.bindControls = function() {
+			buildArrows: function() {
+				this.$element.append("<ul class=\"" + this.arrowsClass + "\"><li><a href=\"#\" data-panopticon-slide=\"prev\">" + this.prevText + "</a></li><li><a href=\"#\" data-panopticon-slide=\"next\">" + this.nextText + "</a></li></ul>");
+				if(this.settings.debug) console.log("[" + this.identifier + "] Built arrows.");
+			},
+
+			buildPips: function() {
+				this.$element.append("<ul class=\"" + this.pipsClass + "\"></ul>");
+				var pipsLinks = "";
+				for(var i = 0; i < this.totalSlides; ++i) {
+					var gotoSlide = (i + 1);
+					pipsLinks += "<li><a href=\"#\" data-panopticon-slide=\"" + gotoSlide + "\">" + gotoSlide + "</a></li>";
+				}
+				this.$element.find("." + this.pipsClass).append(pipsLinks);
+				if(this.settings.debug) console.log("[" + this.identifier + "] Built pips.");
+			},
+
+			bindControls: function() {
 				var self = this;
-				$element.find("[data-panopticon-slide]").on("click", function(e) {
+				self.$element.find("[data-panopticon-slide]").on("click", function(e) {
 					e.preventDefault();
 					var gotoSlide = $(this).attr("data-panopticon-slide").toLowerCase();
 					switch(gotoSlide) {
 						case "prev":
-							self.gotoSlide(currentSlide - 1);
+							self.gotoSlide(self.currentSlide - 1);
 							break;
 						case "next":
-							self.gotoSlide(currentSlide + 1);
+							self.gotoSlide(self.currentSlide + 1);
 							break;
-						default: 
-							self.gotoSlide(gotoSlide);
+						default:
+							self.gotoSlide(gotoSlide); 
 							break;
 					}
 				});
-			}
+				if(this.settings.debug) console.log("[" + this.identifier + "] Bound link controls.");
+			},
 
-			this.bindTouch = function() {
-				var self = this;
-				$element.on("touchstart", function(e) {
+			bindTouch: function() {
+				var self = this,
+				    slideWidth = this.$element.outerWidth(),
+				    touchStartX = undefined,
+				    touchMoveX = undefined,
+				    moveX = undefined;
+				this.$element.on("touchstart", function(e) {
 					touchStartX = e.originalEvent.touches[0].pageX;
 				});
-				$element.on("touchmove", function(e) {
-					var slideWidth = $element.outerWidth();
+				this.$element.on("touchmove", function(e) {
 					touchMoveX = e.originalEvent.touches[0].pageX;
-					moveX = currentSlide * slideWidth + (touchStartX - touchMoveX);
+					moveX = this.currentSlide * slideWidth + (touchStartX - touchMoveX);
 				});
-				$element.on("touchend", function(e) {
-					var self = this,
-					    slideWidth = $element.outerWidth(),
-					    absMove = Math.abs(currentSlide * slideWidth - moveX);
-					if(absMove > slideWidth/3) {
-						if(moveX < (currentSlide * slideWidth)) {
-							self.gotoSlide(currentSlide - 1);
+				this.$element.on("touchend", function(e) {
+					var absMove = Math.abs(this.currentSlide * slideWidth - moveX);
+					if(absMove > (slideWidth / 3)) {
+						if(moveX < (this.currentSlide * slideWidth)) {
+							self.gotoSlide(this.currentSlide - 1);
 						}
-						else if(moveX > (currentSlide * slideWidth)) {
-							self.gotoSlide(currentSlide + 1);
+						else if(moveX > (this.currentSlide * slideWidth)) {
+							self.gotoSlide(this.currentSlide + 1);
 						}
 					}
+					if(this.settings.debug) console.log("[" + this.identifier + "] Bound touch controls.");
+				});
+			},
+
+			bindResize: function() {
+				var self = this;
+				$(window).resize(function() {
+					setTimeout(function() {
+						self.buildSlider();
+						self.gotoSlide(self.currentSlide);
+					}, 500);
 				});
 			}
-
-			return this.init();
 
 		});
 
-	}
+		$.fn[ pluginName ] = function(options) {
+			return this.each(function() {
+				if ( !$.data( this, "plugin_" + pluginName ) ) {
+					$.data( this, "plugin_" + pluginName, new Plugin( this, options ) );
+				}
+			});
+		};
 
-})(jQuery);
+})(jQuery, window, document);
