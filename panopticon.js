@@ -1,5 +1,5 @@
 /**********************************************************
- * PANOPTICON v1.0                                        *
+ * PANOPTICON v1.0.1                                      *
  * A really, really simple jQuery carousel                *
  * made by Grey Hargreaves (greysadventures.com)          *
  * for the Bristol Bronies website (bristolbronies.co.uk) *
@@ -141,20 +141,20 @@
 				});
 				this.$element.on("touchmove", function(e) {
 					touchMoveX = e.originalEvent.touches[0].pageX;
-					moveX = this.currentSlide * slideWidth + (touchStartX - touchMoveX);
+					moveX = self.currentSlide * slideWidth + (touchStartX - touchMoveX);
 				});
 				this.$element.on("touchend", function(e) {
-					var absMove = Math.abs(this.currentSlide * slideWidth - moveX);
+					var absMove = Math.abs(self.currentSlide * slideWidth - moveX);
 					if(absMove > (slideWidth / 3)) {
-						if(moveX < (this.currentSlide * slideWidth)) {
-							self.gotoSlide(this.currentSlide - 1);
+						if(moveX < (self.currentSlide * slideWidth)) {
+							self.gotoSlide(self.currentSlide - 1);
 						}
-						else if(moveX > (this.currentSlide * slideWidth)) {
-							self.gotoSlide(this.currentSlide + 1);
+						else if(moveX > (self.currentSlide * slideWidth)) {
+							self.gotoSlide(self.currentSlide + 1);
 						}
 					}
-					if(this.settings.debug) console.log("[" + this.identifier + "] Bound touch controls.");
 				});
+				if(this.settings.debug) console.log("[" + this.identifier + "] Bound touch controls.");
 			},
 
 			bindResize: function() {

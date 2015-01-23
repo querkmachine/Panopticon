@@ -22,6 +22,9 @@ Future features (maybe)
 Changelog
 ---------
 
+### 1.0.1 
+* Fixed bug with touch controls no longer working. 
+
 ### 1.0
 * Entire plugin has been refactored.
 * Current 'pip' now has a selected class.
